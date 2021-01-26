@@ -5,9 +5,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import yaml
+from astropy.io import fits
+from astropy.wcs import WCS
 
 data_parameters = './parameters/data.yml'
 param_development_small = './parameters/sofia_dev_small.par'
+fitsfile = './data/development_small/sky_dev.fits'
 
 data_path = 'data'
 results_path = 'results'
@@ -61,12 +64,26 @@ def sofia2cat(catalog):
     print(raw_cat_filtered[['x', 'y', 'ell_maj', 'f_sum', 'freq', 'kin_pa', 'w20']])
     return raw_cat_filtered
 
+def pix2coord(fitsfile, x, y):
+    f = fits.open(fitsfile)
+    wcs=WCS(f[0].header)
+    #print(wcs)
+    coord = wcs.pixel_to_world(x, y, 1)
+    #print('coord')
+    #print(coord)
+    return coord[0].ra.deg, coord[0].dec.deg
+
+def convert_units(raw_cat, fitsfile):
+    ra_deg, dec_deg = pix2coord(fitsfile, raw_cat['x'], raw_cat['y'])
+
+
 
 def main():
     download_data(data_parameters, force=False)
     run_sofia(parameters=param_development_small,
               outputdir='development_small')
     raw_cat = sofia2cat(catalog=dev_small_cat)
+    convert_units(raw_cat, fitsfile)
     # Now needs to convert the sofia raw sofia catalog that has 
     # 'x', 'y', 'ell_maj', 'f_sum', 'freq', 'kin_pa', 'w20'
     # to
