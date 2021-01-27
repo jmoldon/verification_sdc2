@@ -9,8 +9,16 @@ conda activate sdc2-ver
 python scripts/analysis.py
 ```
 If you don't have conda installed, please follow these commands:
-```
+
+For Linux
+```bash
 curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh -b -p conda-install
+source conda-install/etc/profile.d/conda.sh
+```
+For MacOS
+```bash
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+bash Miniconda3-latest-MacOSX-x86_64.sh -b -p conda-install
 source conda-install/etc/profile.d/conda.sh
 ```
