@@ -10,31 +10,33 @@ from astropy.wcs import WCS
 
 data_parameters = './parameters/data.yml'
 param_development_small = './parameters/sofia_dev_small.par'
-fitsfile = './data/development_small/sky_dev.fits'
 
-data_path = 'data'
 results_path = 'results'
 
 dev_small_cat = './results/development_small/developement_small_cat.txt'
 final_cat = './results/development_small/final_dev_smal.csv'
 
+with open(data_parameters, "r") as f:
+    data_yml = yaml.load(f, Loader=yaml.FullLoader)
+
+data_path = data_yml['data_path']
+fitsfile = os.path.join(data_path, 'development_small/sky_dev.fits')
+
 def download_data(data_parameters, force=False):
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
         
-    with open(data_parameters, "r") as f:
-        data_yml = yaml.load(f, Loader=yaml.FullLoader)
 
-    for dataset in data_yml.keys():
+    for dataset in data_yml['download_locations'].keys():
         print(dataset)
         dataset_dir = os.path.join(data_path, dataset)
         if force == True:
             shutil.rmtree(dataset_dir)
 
         if not os.path.isdir(dataset_dir):
-            pathname = data_yml[dataset]['path']
+            pathname = data_yml['download_locations'][dataset]['path']
             os.mkdir(dataset_dir)
-            for filename in data_yml[dataset]['files']:
+            for filename in data_yml['download_locations'][dataset]['files']:
                 command = f'wget --no-check-certificate "{pathname}download?path=%2F&files={filename}" -O {dataset_dir}/{filename}'
                 print(command)
                 os.system(command)

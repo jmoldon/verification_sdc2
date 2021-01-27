@@ -1,14 +1,17 @@
-development_small:
-    path: "https://owncloud.ia2.inaf.it/index.php/s/fUXSO5MdK2QT9eh/"
-    files:
-        - "cont_dev.fits"
-        - "README_dev.txt"
-        - "sky_dev.fits"
-        - "sky_dev_truthcat.txt"
+data_path: 'data'
 
-evaluation:
-    path: "https://owncloud.ia2.inaf.it/index.php/s/IEC7eOO4Qdaoi2L/"
-    files:
-        - "cont_eval.fits"
-        - "README_eval.txt"
-        - "sky_eval.fits"
+download_locations:
+    development_small:
+        path: "https://owncloud.ia2.inaf.it/index.php/s/fUXSO5MdK2QT9eh/"
+        files:
+            - "cont_dev.fits"
+            - "README_dev.txt"
+            - "sky_dev.fits"
+            - "sky_dev_truthcat.txt"
+
+    evaluation:
+        path: "https://owncloud.ia2.inaf.it/index.php/s/IEC7eOO4Qdaoi2L/"
+        files:
+            - "cont_eval.fits"
+            - "README_eval.txt"
+            - "sky_eval.fits"
