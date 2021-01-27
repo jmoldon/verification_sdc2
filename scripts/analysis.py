@@ -3,7 +3,7 @@ import shutil
 import re
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import yaml
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -16,6 +16,7 @@ data_path = 'data'
 results_path = 'results'
 
 dev_small_cat = './results/development_small/developement_small_cat.txt'
+final_cat = './results/development_small/final_dev_smal.csv'
 
 def download_data(data_parameters, force=False):
     if not os.path.isdir(data_path):
@@ -61,21 +62,50 @@ def sofia2cat(catalog):
     raw_cat = pd.read_csv(catalog, delim_whitespace=True, header=None, names=head, comment='#')
     raw_cat.sort_values(by='f_sum', ascending=False, inplace=True)
     raw_cat_filtered = raw_cat[raw_cat['kin_pa']>0]
-    print(raw_cat_filtered[['x', 'y', 'ell_maj', 'f_sum', 'freq', 'kin_pa', 'w20']])
+    print('Sofia raw catalog filtered:')
+    print(raw_cat_filtered[['x', 'y', 'ell_maj', 'ell_min', 'f_sum', 'freq', 'kin_pa', 'w20']])
     return raw_cat_filtered
 
-def pix2coord(fitsfile, x, y):
-    f = fits.open(fitsfile)
-    wcs=WCS(f[0].header)
-    #print(wcs)
+def pix2coord(wcs, x, y):
     coord = wcs.pixel_to_world(x, y, 1)
     #print('coord')
     #print(coord)
     return coord[0].ra.deg, coord[0].dec.deg
 
-def convert_units(raw_cat, fitsfile):
-    ra_deg, dec_deg = pix2coord(fitsfile, raw_cat['x'], raw_cat['y'])
+def compute_inclination(bmaj, bmin):
+    # returns an angle in degrees
+    return np.arctan2(bmin, bmaj)*180./np.pi
 
+def convert_units(raw_cat, fitsfile):
+    f = fits.open(fitsfile)
+    wcs=WCS(f[0].header)
+    f.close()
+    # Convert x,y in pixels to R.A.,Dec. in deg
+    ra_deg, dec_deg = pix2coord(wcs, raw_cat['x'], raw_cat['y'])
+    # Get pixel size
+    pix2arcsec = wcs.wcs.get_cdelt()[1]*3600. # This assumes same pixel size in both direction
+    return ra_deg, dec_deg, pix2arcsec
+
+def process_catalog(raw_cat, fitsfile):
+    # Unit conversion
+    ra_deg, dec_deg, pix2arcsec = convert_units(raw_cat, fitsfile)
+    hi_size = raw_cat['ell_maj']*pix2arcsec
+    # Estimate inclination based on fitted ellipsoid, assuming the galaxy is intrinsically circular
+    inclination = compute_inclination(raw_cat['ell_maj'], raw_cat['ell_min'])
+
+    # Construct the output catalog
+    processed_cat = pd.DataFrame()
+    processed_cat['id'] = raw_cat['id']
+    processed_cat['ra'] = ra_deg
+    processed_cat['dec'] = dec_deg
+    processed_cat['hi_size'] = hi_size
+    processed_cat['line_flux_integral'] = raw_cat['f_sum']  # we need to clarify if this is the right magnitude and the right units
+    processed_cat['central_freq'] =  raw_cat['freq'] # we need to clarify if what sofia gives is the central freq
+    processed_cat['pa'] = raw_cat['kin_pa']  # we need to clarify if Sofia kinematic angle agrees with their P.A. 
+    processed_cat['i'] = inclination
+    processed_cat['w20'] = raw_cat['w20'] # we need to clarify if the units and the definition is the same 
+    processed_cat.reset_index(drop=True, inplace=True)
+    return processed_cat
 
 
 def main():
@@ -83,12 +113,10 @@ def main():
     run_sofia(parameters=param_development_small,
               outputdir='development_small')
     raw_cat = sofia2cat(catalog=dev_small_cat)
-    convert_units(raw_cat, fitsfile)
-    # Now needs to convert the sofia raw sofia catalog that has 
-    # 'x', 'y', 'ell_maj', 'f_sum', 'freq', 'kin_pa', 'w20'
-    # to
-    # id ra dec hi_size line_flux_integral central_freq pa i w20
-    # with the right physical units
+    processed_cat = process_catalog(raw_cat, fitsfile)
+    print(processed_cat)
+    print(f'This catalog is being saved in: {final_cat}')
+    processed_cat.to_csv(final_cat, sep=' ', index=False, float_format="%.4f")
 
 if __name__ == "__main__":                
     main()
