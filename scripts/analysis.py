@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import re
 from datetime import datetime
@@ -8,6 +9,7 @@ import pandas as pd
 import yaml
 from astropy.io import fits
 from astropy.wcs import WCS
+from shutil import which
 
 
 #set_type ='evaluation'
@@ -31,6 +33,13 @@ results_path = f'''{main_dir}/results'''
 
 dev_small_cat = f'''{results_path}/{set_type}_small_cat.txt'''
 final_cat = f'''{results_path}/final_catalogue_{set_type}.csv'''
+
+
+# Functions
+def is_tool(name):
+    """Check whether `name` is on PATH and marked as executable."""
+    return which(name) is not None
+
 
 def download_data(data_parameters, type = 'debug', force=False):
     with open(data_parameters, "r") as f:
@@ -62,8 +71,14 @@ def run_sofia(parameters, outputdir):
         if not os.path.isdir(os.path.join(results_path, outputdir)):
             os.mkdir(os.path.join(results_path, outputdir))
         # I guess the 2 is because of my dual installation of SoFiA versions we should implement a version check
-        command = f"sofia2 {parameters}"
-        print(command)
+
+        if is_tool('sofia2'):
+            os.system(f"sofia2 {parameters}")
+        elif is_tool('sofia'):
+            os.system(f"sofia {parameters}")
+        else:
+            print('sofia not available. Please install Sofia-2')
+            sys.exit(1)
         os.system(command)
         command = f'mv {parameters} {os.path.join(results_path, outputdir)}/sofia_input_parameters.par'
         print(command)
