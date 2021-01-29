@@ -1,7 +1,7 @@
 # verification_sdc2
 
 ## Current status
-The script reads the development fits file, runs Sofia, produces a Pandas dataframe and processes the units of R.A., Dec. and size (arcsec). It also outputs a catalog that looks like the following. 
+The script reads the development fits file, runs Sofia, produces a Pandas dataframe and processes the units of R.A., Dec. and size (arcsec). It also outputs a catalog that looks like the following.
 
 ```
 id ra dec hi_size line_flux_integral central_freq pa i w20
@@ -38,3 +38,22 @@ source conda-install/etc/profile.d/conda.sh
 ```
 
 For MacOS, Sofia-2 does not seem to be available as a conda package. You will need to follow the instructions here: https://github.com/SoFiA-Admin/SoFiA-2. So, if you are using Mac, you will need to remove the sofia-2 dependence from the `environment.yml` file
+
+### In Add_FAT branch
+Rewritten the original script to only fit a single cube. Currently set for evaluation, development_small and a debug option. Need to add the large cube option.
+Also now results are written in a directory of choice no longer in the main github file. And the download is only done when the cube is not already present.
+Sofia is also only ran when the catalogue is not found and cubelets are produced. Added some options to sofia input and the output and input are now set dynamically.
+Added a frequency to km/s convert function and converting the freq and w20 when the source finding is done in frequency.
+
+With a trigger pyFAT can be called. This creates a fat directory in the results directory and copies the cubelets into the required per galaxy directory structure.
+Also converts the cubes when in frequency.
+pyFAT is available  on https://github.com/PeterKamphuis/pyFAT and can be installed through 'pip install path/to/githubclone'
+
+It is not yet available through pip in general as it is still in development.
+
+
+###To Do
+Before running FAT a check needs to be done whether there is a source to be fitted.
+FAT should be called internally not through os.system however currently not able to replace the command line options in call
+FAT output should be compared to the initial SoFiA output and some evaluation on the accuracy of the fit.
+Fix many bugs in FAT.

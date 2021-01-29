@@ -10,17 +10,49 @@ pipeline.threads           =  0
 
 # Input
 
-input.data                 =  ./data/development_small/sky_dev.fits
-input.region               =  
-input.gain                 =  
-input.noise                =  
-input.weights              =  
-input.mask                 =  
+input.data                 =  sky_dev.fits
+input.region               =
+input.gain                 =
+input.noise                =
+input.weights              =
+input.mask                 =
 input.invert               =  false
+
+
+# Flagging
+
+flag.region                =
+flag.auto                  =  true
+flag.threshold             =  5.0
+flag.radiusSpatial         =  0
+flag.log                   =  true
+
+# Noise scaling
+
+scaleNoise.enable          =  true
+scaleNoise.mode            =  spectral
+scaleNoise.statistic       =  mad
+scaleNoise.fluxRange       =  negative
+scaleNoise.windowXY        =  50
+scaleNoise.windowZ         =  10
+scaleNoise.gridXY          =  0
+scaleNoise.gridZ           =  0
+scaleNoise.interpolate     =  false
+scaleNoise.scfind          =  true
+
+# Linker
+
+linker.radiusXY            =  3
+linker.radiusZ             =  3
+linker.minSizeXY           =  6
+linker.minSizeZ            =  3
+linker.maxSizeXY           =  0
+linker.maxSizeZ            =  0
+linker.keepNegative        =  false
 
 # Output
 
-output.directory           =  ./results/development_small/
+output.directory           =
 output.filename            =  developement_small
 output.writeCatASCII       =  true
 output.writeCatXML         =  true
@@ -28,9 +60,9 @@ output.writeCatSQL         =  false
 output.writeNoise          =  false
 output.writeFiltered       =  false
 output.writeMask           =  true
-output.writeMask2d         =  true
+output.writeMask2d         =  false
 output.writeRawMask        =  false
 output.writeMoments        =  true
-output.writeCubelets       =  false
+output.writeCubelets       =  true
 output.marginCubelets      =  10
 output.overwrite           =  true
