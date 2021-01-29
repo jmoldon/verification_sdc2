@@ -79,7 +79,6 @@ def run_sofia(parameters, outputdir):
         else:
             print('sofia not available. Please install Sofia-2')
             sys.exit(1)
-        os.system(command)
         command = f'mv {parameters} {os.path.join(results_path, outputdir)}/sofia_input_parameters.par'
         print(command)
         os.system(command)
