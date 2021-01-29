@@ -16,7 +16,7 @@ param_development_small = './parameters/sofia_dev_small.par'
 results_path = 'results'
 
 dev_small_cat = './results/development_small/developement_small_cat.txt'
-final_cat = './results/development_small/final_dev_smal.csv'
+final_cat = './results/development_small/final_dev_small.csv'
 
 with open(data_parameters, "r") as f:
     data_yml = yaml.load(f, Loader=yaml.FullLoader)

@@ -31,6 +31,6 @@ output.writeMask           =  true
 output.writeMask2d         =  true
 output.writeRawMask        =  false
 output.writeMoments        =  true
-output.writeCubelets       =  false
+output.writeCubelets       =  true
 output.marginCubelets      =  10
 output.overwrite           =  true
