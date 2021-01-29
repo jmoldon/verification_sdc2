@@ -27,8 +27,12 @@ main_dir = '/home/peter/SDC2'
 data_parameters = './parameters/data.yml'
 param_development_small = './parameters/sofia_dev_small.par'
 fitsfile = f'''{main_dir}/{type[set_type]['dir']}/{type[set_type]['file']}.fits'''
-
-data_path = f'''{main_dir}/{type[set_type]['dir']}'''
+with open(data_parameters, "r") as f:
+    data_yml = yaml.load(f, Loader=yaml.FullLoader)
+fitsfile = f'''{main_dir}/{data_yml['data_path']}/{type[set_type]['dir']}/{type[set_type]['file']}.fits'''
+data_path = f'''{main_dir}/{data_yml['data_path']}/{type[set_type]['dir']}'''
+if not os.path.isdir(f'''{main_dir}/{data_yml['data_path']}'''):
+    os.mkdir(f'''{main_dir}/{data_yml['data_path']}''')
 results_path = f'''{main_dir}/results'''
 
 dev_small_cat = f'''{results_path}/{set_type}_small_cat.txt'''
@@ -42,8 +46,7 @@ def is_tool(name):
 
 
 def download_data(data_parameters, type = 'debug', force=False):
-    with open(data_parameters, "r") as f:
-        data_yml = yaml.load(f, Loader=yaml.FullLoader)
+
 
     if force == True:
             shutil.rmtree(data_path)
@@ -56,8 +59,8 @@ def download_data(data_parameters, type = 'debug', force=False):
             # This could be expanded to check for the readme and continuum
             return
 
-    for filename in data_yml[type]['files']:
-        pathname = data_yml[type]['path']
+    for filename in data_yml['download_locations'][type]['files']:
+        pathname = data_yml['download_locations'][type]['path']
         command = f'wget --no-check-certificate "{pathname}download?path=%2F&files={filename}" -O {data_path}/{filename}'
         print(command)
         os.system(command)
