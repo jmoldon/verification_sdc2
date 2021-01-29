@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import re
 import numpy as np
@@ -7,6 +8,7 @@ import pandas as pd
 import yaml
 from astropy.io import fits
 from astropy.wcs import WCS
+from shutil import which
 
 data_parameters = './parameters/data.yml'
 param_development_small = './parameters/sofia_dev_small.par'
@@ -22,11 +24,18 @@ with open(data_parameters, "r") as f:
 data_path = data_yml['data_path']
 fitsfile = os.path.join(data_path, 'development_small/sky_dev.fits')
 
+
+
+# Functions
+def is_tool(name):
+    """Check whether `name` is on PATH and marked as executable."""
+    return which(name) is not None
+
+
 def download_data(data_parameters, force=False):
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
         
-
     for dataset in data_yml['download_locations'].keys():
         print(dataset)
         dataset_dir = os.path.join(data_path, dataset)
@@ -46,11 +55,18 @@ def run_sofia(parameters, outputdir):
     if not os.path.isdir(results_path):
         os.mkdir(results_path)
         
-    if not os.path.isdir(os.path.join(results_path, outputdir)):
-        os.mkdir(os.path.join(results_path, outputdir))
+    if not os.path.isfile(os.path.join(results_path, outputdir,'developement_small_cat.txt')):
+        try:
+            os.mkdir(os.path.join(results_path, outputdir))
+        except FileExistsError:
+            pass
         command = f"sofia {parameters}"
         print(command)
-        os.system(command)
+        if is_tool('sofia'):
+            os.system(command)
+        else:
+            print('sofia not available. Please install Sofia-2')
+            sys.exit(1)
     return
 
 def read_sofia_header(filename):
