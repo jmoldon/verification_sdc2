@@ -12,9 +12,9 @@ from astropy.wcs import WCS
 from shutil import which
 
 
-#set_type ='evaluation'
+set_type ='evaluation'
 #set_type ='development_small'
-set_type= 'debug'
+#set_type= 'debug'
 run_fat = False
 type = {'evaluation': {'dir': 'evaluation', 'file': 'sky_eval'},
         'development_small': {'dir': 'development_small', 'file': 'sky_dev'},
@@ -22,7 +22,7 @@ type = {'evaluation': {'dir': 'evaluation', 'file': 'sky_eval'},
 }
 
 
-main_dir = '/home/peter/SDC2'
+main_dir = './'
 
 data_parameters = './parameters/data.yml'
 param_development_small = './parameters/sofia_dev_small.par'
@@ -233,6 +233,8 @@ def process_catalog(raw_cat, fitsfile):
     processed_cat['pa'] = raw_cat['kin_pa']  # we need to clarify if Sofia kinematic angle agrees with their P.A.
     processed_cat['i'] = inclination
     processed_cat.reset_index(drop=True, inplace=True)
+    # This is just to set the right order of the output columns
+    processed_cat = processed_cat[['id', 'ra', 'dec', 'hi_size', 'line_flux_integral', 'central_freq', 'pa', 'i', 'w20']]
     return processed_cat
 
 def prepare_parameters(parameters=param_development_small, type ='debug'):
@@ -326,7 +328,8 @@ def main():
     processed_cat = process_catalog(raw_cat, fitsfile)
     print(processed_cat)
     print(f'This catalog is being saved in: {final_cat}')
-    processed_cat.to_csv(final_cat, sep=' ', index=False, float_format="%.4f")
+    processed_cat['central_freq'] = processed_cat['central_freq'].map('{:.1f}'.format)
+    processed_cat.to_csv(final_cat, sep=' ', index=False)
 
     if run_fat:
         if not os.path.isdir(f'{results_path}/fat'):
