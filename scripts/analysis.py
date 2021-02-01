@@ -37,6 +37,11 @@ results_path = f'''{main_dir}/results'''
 
 dev_small_cat = f'''{results_path}/{set_type}_small_cat.txt'''
 final_cat = f'''{results_path}/final_catalogue_{set_type}.csv'''
+###### Constants to use
+
+f0 = 1420405751.786           #Hz
+c = 299792.458 #m/s
+
 
 
 # Functions
@@ -130,15 +135,23 @@ def convert_units(raw_cat, fitsfile):
     return ra_deg, dec_deg, pix2arcsec,pix2freq
 
 def frequency_to_vel(freq, invert=False):
-    f0 = 1420405751.786           #Hz
-    c = 299792.458 #km/s
     if not invert:
         return c*((f0**2-freq**2)/(f0**2+freq**2))
     else:
         return f0*np.sqrt((1-freq/c)/(1+freq/c))
 
+def convert_flux(flux,filename):
+    #This assume that flux comes from SoFiA in Jy/beam and converts it to Jy * km/s base on the header
+    hdr = fits.getheader(filename)
+    print(hdr['BMAJ'],hdr['BMIN'])
+    beamarea=(np.pi*abs(hdr['BMAJ']*hdr['BMIN']))/(4.*np.log(2.))
+    pix_per_beam = beamarea/(abs(hdr['CDELT1'])*abs(hdr['CDELT2']))
+    cdelt_vel = abs(-c*float(hdr['CDELT3'])/f0)
+    return flux/pix_per_beam*cdelt_vel    #Jy * km/s
+
 # Convert the frequency axis of a cube
 def convert_frequency_axis(filename, outname, velocity_req = 'radio'):
+    c_ms = c*1000.
     print(filename)
     cube = fits.open(filename)
     hdr = cube[0].header
@@ -146,8 +159,7 @@ def convert_frequency_axis(filename, outname, velocity_req = 'radio'):
     if hdr['CTYPE3'].lower() != 'freq' or hdr['NAXIS'] < 3:
         print('We can not convert this axis as it is not a frequency axis')
         return
-    f0 = 1420405751.786           #Hz
-    c = 299792458 #m/s
+
     # get central values
     crpix = float(hdr['CRPIX3'])
     crval = float(hdr['CRVAL3'])
@@ -161,8 +173,8 @@ def convert_frequency_axis(filename, outname, velocity_req = 'radio'):
     #Now convert
     if velocity_req == 'radio':
           # convert from frequency to radio velocity
-            cdelt_vel = -c*float(hdr['CDELT3'])/f0
-            crval_vel = c*(1-crval/f0)
+            cdelt_vel = -c_ms*float(hdr['CDELT3'])/f0
+            crval_vel = c_ms*(1-crval/f0)
             # https://fits.gsfc.nasa.gov/standard40/fits_standard40aa-le.pdf
             hdr['CTYPE3'] = 'VRAD'
     elif velocity_req == 'relativistic':
@@ -174,7 +186,7 @@ def convert_frequency_axis(filename, outname, velocity_req = 'radio'):
         lower_two = frequency_to_vel(crval-(naxis_len/2.+1)*freqstep)
         upper_one = frequency_to_vel(crval+(naxis_len/2.-1.)*freqstep)
         upper_two = frequency_to_vel(crval+(naxis_len/2.)*freqstep)
-        cdelt_vel = np.mean([central_two-crval_vel,lower_two-lower_one,upper_two-upper_one])
+        cdelt_vel = np.mean([central_two-crval_vel,lower_two-lower_one,upper_two-upper_one])*1000.
         if cdelt_vel*naxis_len > 1e6:
             print('This cube is too big for a relativistic conversion')
             return
@@ -207,13 +219,13 @@ def process_catalog(raw_cat, fitsfile):
     processed_cat['ra'] = ra_deg
     processed_cat['dec'] = dec_deg
     processed_cat['hi_size'] = hi_size
-    processed_cat['line_flux_integral'] = raw_cat['f_sum']  # we need to clarify if this is the right magnitude and the right units
+    processed_cat['line_flux_integral'] = convert_flux(raw_cat['f_sum'],fitsfile)  # Now converted to Jy*km/s verifcation for developments needed
     if 'freq' in raw_cat:
         processed_cat['central_freq'] =  raw_cat['freq']
-        processed_cat['central_velocity'] = frequency_to_vel(raw_cat['freq'])
+        #processed_cat['central_velocity'] = frequency_to_vel(raw_cat['freq'])
         processed_cat['w20'] = frequency_to_vel(raw_cat['freq']-raw_cat['w20']/2.*pix2vel)-frequency_to_vel(raw_cat['freq']+raw_cat['w20']/2.*pix2vel) # we need to clarify if the units and the definition is the same
     else:
-        processed_cat['central_velocity'] =  raw_cat['v_app']
+        #processed_cat['central_velocity'] =  raw_cat['v_app']
         processed_cat['central_freq'] = frequency_to_vel(raw_cat['v_app'],invert=True)
         processed_cat['w20'] = raw_cat['w20']*pix2vel
          # we need to clarify if what sofia gives is the central freq
