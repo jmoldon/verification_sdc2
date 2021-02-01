@@ -146,8 +146,9 @@ def convert_flux(flux,filename):
     print(hdr['BMAJ'],hdr['BMIN'])
     beamarea=(np.pi*abs(hdr['BMAJ']*hdr['BMIN']))/(4.*np.log(2.))
     pix_per_beam = beamarea/(abs(hdr['CDELT1'])*abs(hdr['CDELT2']))
-    cdelt_vel = abs(-c*float(hdr['CDELT3'])/f0)
-    return flux/pix_per_beam*cdelt_vel    #Jy * km/s
+    #cdelt_vel = abs(-c*float(hdr['CDELT3'])/f0)
+    cdelt_hz = float(hdr['CDELT3'])
+    return flux/pix_per_beam*cdelt_hz    #Jy * hz
 
 # Convert the frequency axis of a cube
 def convert_frequency_axis(filename, outname, velocity_req = 'radio'):
