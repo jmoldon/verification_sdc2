@@ -279,21 +279,21 @@ def organize_sofia(catalog,convert= True, type='debug'):
     #sofia_output = ['spec.txt','chan.fits','mom0.fits','mom1.fits','mom2.fits','mask.fits','cube.fits']o
     sofia_output = ['cube.fits']
     for source in catalog['id']:
-        if not os.path.isdir(f'{results_path}/fat/sofia_{source}'):
-            os.mkdir(f'{results_path}/fat/sofia_{source}')
+        if not os.path.isdir(f'{main_dir}/interim//sofia_{source}'):
+            os.mkdir(f'{main_dir}/interim//sofia_{source}')
         #Move all sofia out put to a proper directory
         for file in sofia_output:
             if convert:
                 convert_frequency_axis(f'{results_path}/{type}/{type}_cubelets/{type}_{source}_{file}',\
-                f'{results_path}/fat/sofia_{source}/{type}_{source}_{file}')
+                f'{main_dir}/interim/sofia_{source}/{type}_{source}_{file}')
             else:
-                command= f'cp -f {results_path}/{type}/{type}_cubelets/{type}_{source}_{file} {results_path}/fat/sofia_{source}/{type}_{source}_{file}'
+                command= f'cp -f {results_path}/{type}/{type}_cubelets/{type}_{source}_{file} {main_dir}/interim/sofia_{source}/{type}_{source}_{file}'
                 os.system(command)
         fat_catalog['id'].append(source)
         fat_catalog['dist'].append('-1')
         fat_catalog['dir'].append(f'sofia_{source}')
         fat_catalog['cube'].append(f'{type}_{source}_cube')
-    with open(f'{results_path}/fat/fit_catalogue.txt','w') as f:
+    with open(f'{main_dir}/interim/fit_catalogue.txt','w') as f:
         for i in range(len(fat_catalog['id'])):
             f.write(f'''{fat_catalog['id'][i]}|{fat_catalog['dist'][i]}|{fat_catalog['dir'][i]}|{fat_catalog['cube'][i]}\n''')
 
@@ -301,18 +301,18 @@ def fat_configuration(filename,type='debug'):
     with open(filename,'r') as f:
         template = f.readlines()
 
-    with open(f'{results_path}/fat/FAT_INPUT.config','w') as f:
+    with open(f'{main_dir}/interim/FAT_INPUT.config','w') as f:
         f.write(f'#This is the configuration file for fit {type} at {datetime.now()} \n')
 
-    with open(f'{results_path}/fat/FAT_INPUT.config','a') as f:
+    with open(f'{main_dir}/interim/FAT_INPUT.config','a') as f:
         for line in template:
             setting = line.split('=')[0].strip()
             if setting == 'catalogue':
-                line = f'catalogue = {results_path}/fat/fit_catalogue.txt \n'
+                line = f'catalogue = {main_dir}/interim/fit_catalogue.txt \n'
             elif setting == 'maindir':
-                line = f'maindir = {results_path}/fat/ \n'
+                line = f'maindir = {main_dir}/interim/ \n'
             elif setting == 'outputcatalogue':
-                line = f'outputcatalogue={results_path}/fat/fat_results.txt \n'
+                line = f'outputcatalogue={main_dir}/interim/fat_results.txt \n'
             elif setting == 'outputlog':
                 line = f'outputlog = log.txt \n'
             f.write(line)
@@ -332,14 +332,14 @@ def main():
     processed_cat.to_csv(final_cat, sep=' ', index=False)
 
     if run_fat:
-        if not os.path.isdir(f'{results_path}/fat'):
-            os.mkdir(f'{results_path}/fat')
+        if not os.path.isdir(f'{main_dir}/interim'):
+            os.mkdir(f'{main_dir}/interim')
         convert = False
         if 'freq' in raw_cat:
             convert = True
         organize_sofia(processed_cat,convert= convert, type=set_type)
         fat_configuration('./parameters/FAT_INPUT.config',type=set_type)
-        command = f'pyFAT -t -c {results_path}/fat/FAT_INPUT.config'
+        command = f'pyFAT -t -c {main_dir}/interim/FAT_INPUT.config'
         print(command)
         os.system(command)
 
